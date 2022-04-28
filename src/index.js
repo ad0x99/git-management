@@ -1,8 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const { connectToDB } = require('./src/db/index.js');
-const userRoutes = require('./src/routes/user.routes');
+const { connectToDB } = require('./db/index.js');
+const userRoutes = require('./routes/user.routes');
 
 const main = async () => {
   const app = express();
