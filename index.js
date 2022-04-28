@@ -15,7 +15,7 @@ const main = async () => {
   app.use(express.json());
 
   // APIs Routes
-  app.use('/api/users', userRoutes);
+  app.use('/api/v1', userRoutes);
 
   // Server & Database
   await connectToDB();

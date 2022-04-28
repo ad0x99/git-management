@@ -1,14 +1,15 @@
 const express = require('express');
-const { createUser } = require('../controllers/userControllers');
+const { createUser, getAllUsers } = require('../controllers/userControllers');
 const { body } = require('express-validator');
 
 const router = express.Router();
 
 // User routes
+router.get('/users', getAllUsers);
 router.post(
   '/users',
-  body('email').isEmpty().isEmail(),
-  body('password').isEmpty().isLength({ min: 8 }),
+  body('email').notEmpty().isEmail(),
+  body('password').notEmpty().isLength({ min: 6 }),
   createUser
 );
 
