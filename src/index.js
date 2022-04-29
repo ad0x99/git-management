@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const { connectToDB } = require('./db/index.js');
+const { connectToDB } = require('./db/index');
 const userRoutes = require('./routes/user.routes');
 
 const main = async () => {
@@ -21,7 +21,7 @@ const main = async () => {
   await connectToDB();
   app.listen(process.env.NODE_PORT, () => {
     console.log(
-      `Server is running on http://${process.env.NODE_HOST}:${process.env.NODE_PORT}/`
+      `Server is running on http://${process.env.NODE_HOST}:${process.env.NODE_PORT}/`,
     );
   });
 };

@@ -1,7 +1,7 @@
-const { User } = require('../models/Users');
-const { isEmailExist } = require('../services/UserService');
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
+const { User } = require('../models/Users');
+const { isEmailExist } = require('../services/UserService');
 
 const createUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -39,8 +39,8 @@ const createUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   const { page, size } = req.query;
 
-  const pageSize = parseInt(size);
-  const currentPage = parseInt(page);
+  const pageSize = parseInt(size, 10);
+  const currentPage = parseInt(page, 10);
 
   try {
     // Get all users
@@ -50,7 +50,7 @@ const getAllUsers = async (req, res) => {
     });
 
     // Count number of users
-    let count = allUsers.length;
+    const count = allUsers.length;
 
     return res.status(200).json({ count, allUsers });
   } catch (error) {

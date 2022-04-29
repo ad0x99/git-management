@@ -1,0 +1,36 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": ["airbnb-base"],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "consistent-return": 0,
+    "no-underscore-dangle": 0,
+    "no-unused-vars": 0,
+    "no-console": 0,
+    "no-unused-expressions": [2, { "allowTaggedTemplates": true }],
+    "no-param-reassign": 0,
+    "no-restricted-syntax": [0, "ForInStatement"],
+    "no-await-in-loop": 0,
+    "no-empty-function": 0,
+    "import/no-extraneous-dependencies": [2, { "optionalDependencies": true }],
+    "import/prefer-default-export": 0,
+    "class-methods-use-this": 0,
+    "max-classes-per-file": 0,
+    "no-useless-constructor": 0,
+    "no-useless-catch": 0,
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never"
+      }
+    ]
+  }
+}
