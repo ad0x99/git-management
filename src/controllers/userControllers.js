@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
-const { Responser } = require('../CONST/response');
+const { prepareResponse } = require('../CONST/response');
 const { User } = require('../models/Users');
 const { isEmailExist } = require('../services/UserService');
 
@@ -13,7 +13,7 @@ const createUser = async (req, res) => {
     }
 
     if (await isEmailExist(email)) {
-      return Responser(
+      return prepareResponse(
         res,
         409,
         'Email is already used by another account. Please use a new email',
@@ -29,9 +29,9 @@ const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    return Responser(res, 201, 'Created New User Successfully', newUser);
+    return prepareResponse(res, 201, 'Created New User Successfully', newUser);
   } catch (error) {
-    return Responser(res, 400, 'Create New User Failed');
+    return prepareResponse(res, 400, 'Create New User Failed');
   }
 };
 
@@ -48,12 +48,12 @@ const getAllUsers = async (req, res) => {
     });
     const count = allUsers.length;
 
-    return Responser(res, 200, 'Get all users successfully', {
+    return prepareResponse(res, 200, 'Get all users successfully', {
       count,
       allUsers,
     });
   } catch (error) {
-    return Responser(res, 404, 'Users Not Found');
+    return prepareResponse(res, 404, 'Users Not Found');
   }
 };
 

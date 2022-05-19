@@ -1,8 +1,8 @@
-const Responser = (res, status, message, rest) => {
+const prepareResponse = (res, status, message, args) => {
   res.status(status).json({
     message,
-    ...rest,
+    ...args,
   });
 };
 
-module.exports = { Responser };
+module.exports = { prepareResponse };
