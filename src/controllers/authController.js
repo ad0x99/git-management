@@ -1,9 +1,82 @@
+// @ts-nocheck
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
+const { User, USER_ROLES } = require('../models/Users');
 const { prepareResponse } = require('../CONST/response');
-const { User } = require('../models/Users');
 const { isEmailExist } = require('../services/UserService');
+
+const isAdmin = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    const verifiedToken = jwt.verify(token, process.env.SECRET_TOKEN);
+
+    const user = await User.findOne({
+      _id: verifiedToken.id,
+      role: USER_ROLES.ADMIN,
+    });
+
+    if (user) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    return prepareResponse(res, 404, 'Get User Context Failed');
+  }
+};
+
+const isAuthenticated = async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const verifiedToken = jwt.verify(token, process.env.SECRET_TOKEN);
+
+      const user = await User.findOne({
+        _id: verifiedToken.id,
+        role: USER_ROLES.ADMIN,
+        active: true,
+      });
+
+      if (!user) {
+        return prepareResponse(
+          res,
+          401,
+          'You dont have permission to this resource',
+        );
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      return prepareResponse(res, 401, 'Not authorized, token failed');
+    }
+  }
+
+  if (!token) {
+    return prepareResponse(res, 401, 'Not authorized, token in missing');
+  }
+};
+
+const verifyToken = async (req, res, next) => {
+  try {
+    const token = req.header('jwt');
+
+    if (!token) {
+      return prepareResponse(res, 403, 'Access Denied');
+    }
+
+    const verifiedToken = await jwt.verify(token, process.env.SECRET_TOKEN);
+    req.user = verifiedToken;
+    next();
+  } catch (error) {
+    return prepareResponse(res, 401, 'Invalid Token');
+  }
+};
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -20,6 +93,7 @@ const login = async (req, res) => {
       {
         _id: 1,
         name: 1,
+        role: 1,
         password: 1,
       },
     );
@@ -37,7 +111,7 @@ const login = async (req, res) => {
     }
 
     const token = await jwt.sign(
-      { id: userCredential._id },
+      { id: userCredential._id, role: userCredential.role },
       process.env.SECRET_TOKEN,
       {
         expiresIn: '24h',
@@ -84,4 +158,4 @@ const signup = async (req, res) => {
   }
 };
 
-module.exports = { login, signup };
+module.exports = { login, signup, verifyToken, isAuthenticated, isAdmin };
