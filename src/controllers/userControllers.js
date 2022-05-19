@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
+const { Responser } = require('../CONST/response');
 const { User } = require('../models/Users');
 const { isEmailExist } = require('../services/UserService');
 
@@ -12,10 +13,11 @@ const createUser = async (req, res) => {
     }
 
     if (await isEmailExist(email)) {
-      return res.status(409).json({
-        message:
-          'Email is already used by another account. Please use a new email',
-      });
+      return Responser(
+        res,
+        409,
+        'Email is already used by another account. Please use a new email',
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -27,12 +29,9 @@ const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    return res.status(201).json({
-      message: 'Created New User Successfully',
-      newUser,
-    });
+    return Responser(res, 201, 'Created New User Successfully', newUser);
   } catch (error) {
-    return res.status(400).json({ message: 'Create New User Failed' });
+    return Responser(res, 400, 'Create New User Failed');
   }
 };
 
@@ -43,18 +42,18 @@ const getAllUsers = async (req, res) => {
   const currentPage = parseInt(page, 10);
 
   try {
-    // Get all users
     const allUsers = await User.find({
       limit: pageSize,
       offset: (currentPage - 1) * pageSize,
     });
-
-    // Count number of users
     const count = allUsers.length;
 
-    return res.status(200).json({ count, allUsers });
+    return Responser(res, 200, 'Get all users successfully', {
+      count,
+      allUsers,
+    });
   } catch (error) {
-    return res.status(404).json({ message: 'Users Not Found' });
+    return Responser(res, 404, 'Users Not Found');
   }
 };
 

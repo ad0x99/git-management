@@ -1,6 +1,6 @@
 const express = require('express');
-const { createUser, getAllUsers } = require('../controllers/userControllers');
 const { body } = require('express-validator');
+const { createUser, getAllUsers } = require('../controllers/userControllers');
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ router.post(
   '/users',
   body('email').notEmpty().isEmail(),
   body('password').notEmpty().isLength({ min: 6 }),
-  createUser
+  createUser,
 );
 
 module.exports = router;
