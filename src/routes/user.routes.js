@@ -4,6 +4,7 @@ const {
   login,
   signup,
   isAdminPermission,
+  isAuthenticated,
 } = require('../controllers/authController');
 const {
   createUser,
@@ -15,9 +16,10 @@ const {
 const router = express.Router();
 
 // User routes
-router.get('/users', isAdminPermission, getAllUsers);
+router.get('/users', isAuthenticated, isAdminPermission, getAllUsers);
 router.post(
   '/users',
+  isAuthenticated,
   isAdminPermission,
   body('email').notEmpty().isEmail(),
   body('password').notEmpty().isLength({ min: 6 }),
@@ -25,11 +27,12 @@ router.post(
 );
 router.put(
   '/users/:id',
+  isAuthenticated,
   isAdminPermission,
   body('email').isEmail(),
   updateUserInfo,
 );
-router.delete('/users/:id', isAdminPermission, deleteUser);
+router.delete('/users/:id', isAuthenticated, isAdminPermission, deleteUser);
 
 // Auth routes
 router.post(
