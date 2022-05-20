@@ -25,6 +25,22 @@
     "max-classes-per-file": 0,
     "no-useless-constructor": 0,
     "no-useless-catch": 0,
+    "prefer-destructuring": [
+      "error",
+      {
+        "array": false,
+        "object": true
+      }
+    ],
+    "object-curly-newline": [
+      "error",
+      {
+        "ObjectPattern": { "multiline": true },
+        "ImportDeclaration": "never",
+        "ExportDeclaration": "never"
+      }
+    ],
+    "operator-linebreak": ["error", "after"],
     "import/extensions": [
       "error",
       "ignorePackages",
