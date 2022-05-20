@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const { User, USER_ROLES } = require('../models/Users');
 const { prepareResponse } = require('../CONST/response');
 const { isEmailExist } = require('../services/UserService');
+const { EmailService, sendConfirmEmail } = require('../helpers/emailHandler');
+const { confirmEmail } = require('../CONST/emailTemplate');
 
 /**
  * It checks if the user is an admin
@@ -218,16 +220,63 @@ const signup = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const accessToken = jwt.sign(
+      { email },
+      process.env.CONFIRM_EMAIL_TOKEN_SECRET,
+      {
+        expiresIn: process.env.REFRESH_TOKEN_EXP,
+      },
+    );
 
-    const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
+    const [newUser] = await Promise.all([
+      await User.create({
+        name,
+        email,
+        password: hashedPassword,
+      }),
+      await sendConfirmEmail({
+        from: 'GIT Club',
+        to: email,
+        subject: 'GIT Club - Please confirm your email address',
+        html: confirmEmail(
+          `${process.env.CLIENT_URL}${process.env.CONFIRM_EMAIL_PATH}/?token=${accessToken}`,
+          name,
+        ),
+      }),
+    ]);
 
-    return prepareResponse(res, 201, 'Created New User Successfully', newUser);
+    return prepareResponse(res, 201, 'Signup User Successfully', { newUser });
   } catch (error) {
-    return prepareResponse(res, 400, 'Create New User Failed');
+    return prepareResponse(res, 400, 'Signup User Failed');
+  }
+};
+
+/**
+ * It takes a token from the request body, verifies it, and then updates the user's active status to
+ * true
+ * @param req - The request object.
+ * @param res - the response object
+ */
+const activeUser = async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    const verifiedToken = await jwt.verify(
+      token,
+      process.env.CONFIRM_EMAIL_TOKEN_SECRET,
+    );
+    const userActivated = await User.findOneAndUpdate(
+      { email: verifiedToken.email },
+      { $set: { active: true } },
+      { new: true },
+    );
+
+    return prepareResponse(res, 201, 'Active User Successfully', {
+      userActivated,
+    });
+  } catch (error) {
+    console.log(error);
+    return prepareResponse(res, 400, 'Active user failed');
   }
 };
 
@@ -238,4 +287,5 @@ module.exports = {
   isAdminPermission,
   isAdmin,
   isAuthenticated,
+  activeUser,
 };

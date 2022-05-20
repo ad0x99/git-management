@@ -5,6 +5,7 @@ const {
   signup,
   isAdminPermission,
   isAuthenticated,
+  activeUser,
 } = require('../controllers/authController');
 const {
   createUser,
@@ -43,9 +44,11 @@ router.post(
 );
 router.post(
   '/signup',
+  body('name').notEmpty().isLength({ min: 5, max: 256 }),
   body('email').notEmpty().isEmail(),
-  body('password').notEmpty().isLength({ min: 6 }),
+  body('password').notEmpty().isLength({ min: 6, max: 256 }),
   signup,
 );
+router.post('/active', body('token').notEmpty().isJWT(), activeUser);
 
 module.exports = router;
