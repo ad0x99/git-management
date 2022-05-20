@@ -10,3 +10,4 @@ yarn-error.log*
 .eslintcache
 logs
 yarn.lock
+data
