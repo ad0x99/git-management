@@ -6,6 +6,12 @@ const { User, USER_ROLES } = require('../models/Users');
 const { prepareResponse } = require('../CONST/response');
 const { isEmailExist } = require('../services/UserService');
 
+/**
+ * It checks if the user is an admin
+ * @param req - The request object
+ * @param res - The response object
+ * @returns A function that takes in a request and a response object.
+ */
 const isAdmin = async (req, res) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
@@ -26,7 +32,14 @@ const isAdmin = async (req, res) => {
   }
 };
 
-const isAuthenticated = async (req, res, next) => {
+/**
+ * It checks if the user is authenticated and if the user is an admin
+ * @param req - The request object.
+ * @param res - The response object
+ * @param next - This is a callback function that is called when the middleware is done.
+ * @returns A function that is being exported.
+ */
+const isAdminPermission = async (req, res, next) => {
   let token;
   if (
     req.headers.authorization &&
@@ -45,9 +58,46 @@ const isAuthenticated = async (req, res, next) => {
       if (!user) {
         return prepareResponse(
           res,
-          401,
+          403,
           'You dont have permission to this resource',
         );
+      }
+
+      next();
+    } catch (error) {
+      return prepareResponse(res, 401, 'Not authorized, token failed');
+    }
+  }
+
+  if (!token) {
+    return prepareResponse(res, 401, 'Not authorized, token in missing');
+  }
+};
+
+/**
+ * It checks if the user is authenticated
+ * @param req - The request object
+ * @param res - The response object
+ * @param next - This is a callback function that is called when the middleware is done.
+ * @returns A function that is being exported.
+ */
+const isAuthenticated = async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const verifiedToken = jwt.verify(token, process.env.SECRET_TOKEN);
+
+      const user = await User.findOne({
+        _id: verifiedToken.id,
+        active: true,
+      });
+
+      if (!user) {
+        return prepareResponse(res, 403, 'Access denied!');
       }
 
       req.user = user;
@@ -62,6 +112,13 @@ const isAuthenticated = async (req, res, next) => {
   }
 };
 
+/**
+ * Verify token from request headers
+ * @param req - The request object
+ * @param res - The response object
+ * @param next - This is a function that is called when the middleware is complete.
+ * @returns A function that takes in three parameters: req, res, and next.
+ */
 const verifyToken = async (req, res, next) => {
   try {
     const token = req.header('jwt');
@@ -78,6 +135,12 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
+/**
+ * Login function
+ * the user
+ * @param req - The request object.
+ * @param res - The response object.
+ */
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -95,11 +158,16 @@ const login = async (req, res) => {
         name: 1,
         role: 1,
         password: 1,
+        active: 1,
       },
     );
 
     if (!userCredential) {
       return prepareResponse(res, 404, 'Could not found email');
+    }
+
+    if (!userCredential.active) {
+      return prepareResponse(res, 403, 'Your account is inactive');
     }
 
     const isValidPassword = await bcrypt.compare(
@@ -127,6 +195,11 @@ const login = async (req, res) => {
   }
 };
 
+/**
+ * It creates a new user account
+ * @param req - The request object.
+ * @param res - The response object.
+ */
 const signup = async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -158,4 +231,11 @@ const signup = async (req, res) => {
   }
 };
 
-module.exports = { login, signup, verifyToken, isAuthenticated, isAdmin };
+module.exports = {
+  login,
+  signup,
+  verifyToken,
+  isAdminPermission,
+  isAdmin,
+  isAuthenticated,
+};
