@@ -149,11 +149,9 @@ const signup = async (req, res) => {
       },
     );
 
-    const [newUser] = await models.$transaction([
-      createOne('user', {
-        name,
-        email,
-        password: hashedPassword,
+    const [newUser, _] = await Promise.all([
+      models.user.create({
+        data: { name, email, password: hashedPassword },
       }),
       sendConfirmEmail({
         from: 'GIT Club',
@@ -168,6 +166,7 @@ const signup = async (req, res) => {
 
     return prepareResponse(res, 201, 'Signup User Successfully', { newUser });
   } catch (error) {
+    console.error(error);
     return prepareResponse(res, 400, 'Signup User Failed');
   }
 };
