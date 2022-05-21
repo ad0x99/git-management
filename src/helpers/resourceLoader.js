@@ -1,32 +1,3 @@
-<<<<<<< HEAD
-const { v4: uuidv4 } = require('uuid');
-const { models } = require('../db');
-
-const resources = [
-  'user',
-  'class',
-  'classCalendar',
-  'classUser',
-  'file',
-  'userAttendance',
-];
-
-/**
- * It creates a new record in the database
- * @param resource - The name of the resource you want to create.
- * @param params - The data you want to create.
- */
-const createOne = async (resource, params) => {
-  const isResourceExist = resources.includes(resource);
-
-  if (!isResourceExist) {
-    throw new Error('Resource not found');
-  }
-
-  try {
-    const id = uuidv4();
-    await models[resource].create({
-=======
 const { PrismaClient } = require('@prisma/client');
 const { v4: uuidv4 } = require('uuid');
 const { models } = require('../db');
@@ -73,7 +44,6 @@ const createOne = async (model, params) => {
     const resource = getModel(model);
 
     await models[model].create({
->>>>>>> 90ec114 (refactor: uuid and handle auth/user controllers)
       data: { id, ...params },
     });
   } catch (error) {
@@ -87,14 +57,6 @@ const createOne = async (model, params) => {
  * @param params - The data to be created.
  */
 const createMany = async (resource, params) => {
-<<<<<<< HEAD
-  const isResourceExist = resources.includes(resource);
-  if (!isResourceExist) {
-    throw new Error('Resource not found');
-  }
-
-=======
->>>>>>> 90ec114 (refactor: uuid and handle auth/user controllers)
   if (Array.isArray(params)) {
     throw new Error('Invalid params');
   }
