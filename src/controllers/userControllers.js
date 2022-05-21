@@ -1,5 +1,4 @@
 const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
 const { Role } = require('@prisma/client');
 const { validationResult } = require('express-validator');
 const { prepareResponse } = require('../CONST/response');
@@ -38,6 +37,14 @@ const getAllUsers = async (req, res) => {
       where: {
         ...conditions,
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        roles: true,
+        points: true,
+        active: true,
+      },
     });
     const count = allUsers.length;
 
@@ -56,7 +63,7 @@ const getAllUsers = async (req, res) => {
  * @param res - The response object.
  */
 const createUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, roles } = req.body;
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -74,14 +81,9 @@ const createUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const uuid = uuidv4();
 
-    const newUser = await createOne('user', {
-      id: uuid,
-      name,
-      email,
-      role,
-      password: hashedPassword,
+    const newUser = await models.user.create({
+      data: { name, email, roles, password: hashedPassword },
     });
 
     return prepareResponse(res, 201, 'Created New User Successfully', {
