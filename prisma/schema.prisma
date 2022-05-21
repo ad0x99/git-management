@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Class {
+  id            String          @id
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  className     String          @db.VarChar(255)
+  Subject       String?
+  startDate     DateTime
+  endDate       DateTime
+  host          String
+  classCalendar ClassCalendar[]
+  classUser     ClassUser[]
+}
+
+model ClassCalendar {
+  id             String           @id
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  class          Class            @relation(fields: [classId], references: [id])
+  classId        String
+  studyDate      DateTime
+  UserAttendance UserAttendance[]
+}
+
+model UserAttendance {
+  attendanceId  String         @id
+  user          User           @relation(fields: [userId], references: [id])
+  userId        String
+  status        String
+  classCalendar ClassCalendar? @relation(fields: [classUserId], references: [id])
+  classUserId   String?
+}
+
+model ClassUser {
+  id      String  @id @unique
+  class   Class   @relation(fields: [classId], references: [id])
+  classId String
+  user    User    @relation(fields: [userId], references: [id])
+  userId  String
+  status  String?
+}
+
+model User {
+  id               String           @id
+  email            String           @unique
+  name             String?
+  password         String           @ignore
+  roles            Role             @default(USER)
+  points           String?
+  active           Boolean          @default(false)
+  attendanceStatus UserAttendance[]
+  classUser        ClassUser[]
+}
+
+model File {
+  id   String @id
+  link String
+}
+
+enum Role {
+  ADMIN
+  USER
+}

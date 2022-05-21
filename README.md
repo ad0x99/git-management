@@ -2,7 +2,7 @@
 
 - A small Node.js APIs using for training at GIT (Greenwich IT Club)
 - It's a member management application
-- Built by [@ad0x99](https://github.com/ad0x99) & [@duongptryu](https://github.com/duongptryu) with ❤️
+- Built by [@ad0x99](https://github.com/ad0x99) & [@duongptryu](https://github.com/duongptryu) & [@crow18120](https://github.com/crow18120) with ❤️
 
 # Working with coding style and git
 
@@ -11,10 +11,11 @@
 - Master: for deployment purpose, only receive pull request and merge from main to deploy
 - Main: for development environment. Only receive pull request and merge pull request from others development branch (feature, bugfix, hotfix)
 - [feature, bugfix, hotfix]/example_feature: for functionality development
-- Note for commit message: 
- - Valid title: feat (for new features), refactor (for refactor code), fix (for fix bug)
+- Note for commit message:
+- Valid title: feat (for new features), refactor (for refactor code), fix (for fix bug)
 
 ### Coding Style
+
 - Coding Style: [Airbnb](https://github.com/airbnb/javascript)
 
 # Config Requirement
@@ -30,7 +31,14 @@
 yarn install
 ```
 
-3. Run server
+3. Migrate database
+
+```bash
+npx prisma migrate dev --name generate-db
+```
+
+4. Run server
+
 ```bash
 yarn start
 ```
