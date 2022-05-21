@@ -1,16 +1,5 @@
-// @ts-nocheck
-const mongoose = require('mongoose');
+const { PrismaClient } = require('@prisma/client');
 
-const connectToDB = async () => {
-  const connectString = `${process.env.DB_PROTOCOL}://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}${process.env.DB_PORT}/${process.env.DB_NAME}`;
-  try {
-    await mongoose.connect(connectString, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-  } catch (err) {
-    console.error(err);
-  }
-};
+const models = new PrismaClient();
 
-module.exports = { connectToDB };
+module.exports = { models };

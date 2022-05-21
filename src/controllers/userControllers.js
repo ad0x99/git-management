@@ -1,9 +1,12 @@
 const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
+const { Role } = require('@prisma/client');
 const { validationResult } = require('express-validator');
 const { prepareResponse } = require('../CONST/response');
-const { User, USER_ROLES } = require('../models/Users');
 const { isEmailExist } = require('../services/UserService');
 const { isAdmin } = require('./authController');
+const { models } = require('../db');
+const { createOne } = require('../helpers/resourceLoader');
 
 /**
  * It gets all users from the database and returns them to the user
@@ -18,17 +21,25 @@ const getAllUsers = async (req, res) => {
   const currentPage = parseInt(page, 10);
 
   try {
-    const conditions = {
-      limit: pageSize,
-      offset: (currentPage - 1) * pageSize,
-    };
+    const conditions = {};
     const isAdminRole = await isAdmin(req, res);
-    const allUsers = await User.find(conditions);
-    const count = allUsers.length;
+    if (page && size) {
+      conditions.AND = {
+        limit: pageSize,
+        offset: (currentPage - 1) * pageSize,
+      };
+    }
 
     if (!isAdminRole) {
-      conditions.role = { $ne: USER_ROLES.ADMIN };
+      conditions.roles = Role.ADMIN;
     }
+
+    const allUsers = await models.user.findMany({
+      where: {
+        ...conditions,
+      },
+    });
+    const count = allUsers.length;
 
     return prepareResponse(res, 200, 'Get all users successfully', {
       count,
@@ -45,7 +56,7 @@ const getAllUsers = async (req, res) => {
  * @param res - The response object.
  */
 const createUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -63,10 +74,13 @@ const createUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const uuid = uuidv4();
 
-    const newUser = await User.create({
+    const newUser = await createOne('user', {
+      id: uuid,
       name,
       email,
+      role,
       password: hashedPassword,
     });
 
@@ -89,7 +103,7 @@ const updateUserInfo = async (req, res) => {
   let params = {};
 
   try {
-    const user = await User.findById(id);
+    const user = await models.user.findUnique({ where: { id } });
     const isAdminRole = await isAdmin(req, res);
 
     if (!user) {
@@ -110,7 +124,10 @@ const updateUserInfo = async (req, res) => {
       params = { ...req.body };
     }
 
-    const userInfo = await User.findOneAndUpdate({ ...params });
+    const userInfo = await models.user.update({
+      where: { id },
+      data: { ...params },
+    });
     return prepareResponse(res, 201, 'Update User Info Successfully', {
       userInfo,
     });
@@ -128,17 +145,22 @@ const deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const user = await User.findById(id);
+    const user = await models.user.findFirst({ where: { id } });
 
     if (!user) {
       return prepareResponse(res, 404, 'User not exists');
     }
 
-    await User.deleteOne({ _id: id });
+    await models.user.delete({ where: { id } });
     return prepareResponse(res, 201, 'User is deleted');
   } catch (error) {
     return prepareResponse(res, 400, 'Delete User Failed');
   }
 };
 
-module.exports = { createUser, getAllUsers, updateUserInfo, deleteUser };
+module.exports = {
+  createUser,
+  getAllUsers,
+  updateUserInfo,
+  deleteUser,
+};

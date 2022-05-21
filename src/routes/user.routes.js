@@ -1,18 +1,13 @@
 const express = require('express');
 const { body } = require('express-validator');
-const {
-  login,
-  signup,
-  isAdminPermission,
-  isAuthenticated,
-  activeUser,
-} = require('../controllers/authController');
+const { login, signup, activeUser } = require('../controllers/authController');
 const {
   createUser,
   getAllUsers,
   updateUserInfo,
   deleteUser,
 } = require('../controllers/userControllers');
+const { isAuthenticated, isAdminPermission } = require('../middleware/auth');
 
 const router = express.Router();
 

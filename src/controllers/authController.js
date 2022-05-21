@@ -1,12 +1,14 @@
 // @ts-nocheck
 const bcrypt = require('bcryptjs');
+const { Role } = require('@prisma/client');
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
-const { User, USER_ROLES } = require('../models/Users');
 const { prepareResponse } = require('../CONST/response');
 const { isEmailExist } = require('../services/UserService');
-const { EmailService, sendConfirmEmail } = require('../helpers/emailHandler');
+const { sendConfirmEmail } = require('../helpers/emailHandler');
 const { confirmEmail } = require('../CONST/emailTemplate');
+const { models } = require('../db');
+const { createOne } = require('../helpers/resourceLoader');
 
 /**
  * It checks if the user is an admin
@@ -19,9 +21,8 @@ const isAdmin = async (req, res) => {
     const token = req.headers.authorization.split(' ')[1];
     const verifiedToken = jwt.verify(token, process.env.SECRET_TOKEN);
 
-    const user = await User.findOne({
-      _id: verifiedToken.id,
-      role: USER_ROLES.ADMIN,
+    const user = await models.user.findFirst({
+      where: { _id: verifiedToken.id, roles: Role.ADMIN },
     });
 
     if (user) {
@@ -31,86 +32,6 @@ const isAdmin = async (req, res) => {
     return false;
   } catch (error) {
     return prepareResponse(res, 404, 'Get User Context Failed');
-  }
-};
-
-/**
- * It checks if the user is authenticated and if the user is an admin
- * @param req - The request object.
- * @param res - The response object
- * @param next - This is a callback function that is called when the middleware is done.
- * @returns A function that is being exported.
- */
-const isAdminPermission = async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const verifiedToken = jwt.verify(token, process.env.SECRET_TOKEN);
-
-      const user = await User.findOne({
-        _id: verifiedToken.id,
-        role: USER_ROLES.ADMIN,
-        active: true,
-      });
-
-      if (!user) {
-        return prepareResponse(
-          res,
-          403,
-          'You dont have permission to this resource',
-        );
-      }
-
-      next();
-    } catch (error) {
-      return prepareResponse(res, 401, 'Not authorized, token failed');
-    }
-  }
-
-  if (!token) {
-    return prepareResponse(res, 401, 'Not authorized, token in missing');
-  }
-};
-
-/**
- * It checks if the user is authenticated
- * @param req - The request object
- * @param res - The response object
- * @param next - This is a callback function that is called when the middleware is done.
- * @returns A function that is being exported.
- */
-const isAuthenticated = async (req, res, next) => {
-  let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const verifiedToken = jwt.verify(token, process.env.SECRET_TOKEN);
-
-      const user = await User.findOne({
-        _id: verifiedToken.id,
-        active: true,
-      });
-
-      if (!user) {
-        return prepareResponse(res, 403, 'Access denied!');
-      }
-
-      req.user = user;
-      next();
-    } catch (error) {
-      return prepareResponse(res, 401, 'Not authorized, token failed');
-    }
-  }
-
-  if (!token) {
-    return prepareResponse(res, 401, 'Not authorized, token in missing');
   }
 };
 
@@ -151,18 +72,18 @@ const login = async (req, res) => {
   }
 
   try {
-    const userCredential = await User.findOne(
-      {
+    const userCredential = await models.user.findFirst({
+      where: {
         email,
       },
-      {
-        _id: 1,
-        name: 1,
-        role: 1,
-        password: 1,
-        active: 1,
+      select: {
+        id: true,
+        name: true,
+        roles: true,
+        password: true,
+        active: true,
       },
-    );
+    });
 
     if (!userCredential) {
       return prepareResponse(res, 404, 'Could not found email');
@@ -181,7 +102,7 @@ const login = async (req, res) => {
     }
 
     const token = await jwt.sign(
-      { id: userCredential._id, role: userCredential.role },
+      { id: userCredential._id, roles: userCredential.roles },
       process.env.SECRET_TOKEN,
       {
         expiresIn: '24h',
@@ -228,13 +149,13 @@ const signup = async (req, res) => {
       },
     );
 
-    const [newUser] = await Promise.all([
-      await User.create({
+    const [newUser] = await models.$transaction([
+      createOne('user', {
         name,
         email,
         password: hashedPassword,
       }),
-      await sendConfirmEmail({
+      sendConfirmEmail({
         from: 'GIT Club',
         to: email,
         subject: 'GIT Club - Please confirm your email address',
@@ -265,17 +186,15 @@ const activeUser = async (req, res) => {
       token,
       process.env.CONFIRM_EMAIL_TOKEN_SECRET,
     );
-    const userActivated = await User.findOneAndUpdate(
-      { email: verifiedToken.email },
-      { $set: { active: true } },
-      { new: true },
-    );
+    const userActivated = await models.user.update({
+      where: { email: verifiedToken.email },
+      data: { $set: { active: true } },
+    });
 
     return prepareResponse(res, 201, 'Active User Successfully', {
       userActivated,
     });
   } catch (error) {
-    console.log(error);
     return prepareResponse(res, 400, 'Active user failed');
   }
 };
@@ -284,8 +203,6 @@ module.exports = {
   login,
   signup,
   verifyToken,
-  isAdminPermission,
   isAdmin,
-  isAuthenticated,
   activeUser,
 };
