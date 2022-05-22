@@ -148,12 +148,13 @@ const signup = async (req, res) => {
       },
     );
 
-    const [newUser, _] = await Promise.all([
+    const [newUser, emailSender] = await Promise.all([
       models.user.create({
         data: { name, email, password: hashedPassword },
+        select: { email: true, name: true },
       }),
       sendConfirmEmail({
-        from: 'GIT Club',
+        from: process.env.EMAIL_USERNAME,
         to: email,
         subject: 'GIT Club - Please confirm your email address',
         html: confirmEmail(
@@ -165,7 +166,6 @@ const signup = async (req, res) => {
 
     return prepareResponse(res, 201, 'Signup User Successfully', { newUser });
   } catch (error) {
-    console.error(error);
     return prepareResponse(res, 400, 'Signup User Failed');
   }
 };
