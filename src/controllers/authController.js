@@ -5,10 +5,9 @@ const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const { prepareResponse } = require('../CONST/response');
 const { isEmailExist } = require('../services/UserService');
-const { sendConfirmEmail } = require('../helpers/emailHandler');
+const { sendConfirmEmail } = require('../utils/emailHandler');
 const { confirmEmail } = require('../CONST/emailTemplate');
 const { models } = require('../db');
-const { createOne } = require('../helpers/resourceLoader');
 
 /**
  * It checks if the user is an admin
@@ -149,12 +148,13 @@ const signup = async (req, res) => {
       },
     );
 
-    const [newUser, _] = await Promise.all([
+    const [newUser, emailSender] = await Promise.all([
       models.user.create({
         data: { name, email, password: hashedPassword },
+        select: { email: true, name: true },
       }),
       sendConfirmEmail({
-        from: 'GIT Club',
+        from: process.env.EMAIL_USERNAME,
         to: email,
         subject: 'GIT Club - Please confirm your email address',
         html: confirmEmail(
@@ -166,7 +166,6 @@ const signup = async (req, res) => {
 
     return prepareResponse(res, 201, 'Signup User Successfully', { newUser });
   } catch (error) {
-    console.error(error);
     return prepareResponse(res, 400, 'Signup User Failed');
   }
 };
