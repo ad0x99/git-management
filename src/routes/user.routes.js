@@ -8,6 +8,7 @@ const {
   deleteUser,
 } = require('../controllers/userControllers');
 const { isAuthenticated, isAdminPermission } = require('../middleware/auth');
+const { sendConfirmEmail } = require('../utils/sesService');
 
 const router = express.Router();
 
@@ -29,6 +30,7 @@ router.put(
   updateUserInfo,
 );
 router.delete('/users/:id', isAuthenticated, isAdminPermission, deleteUser);
+router.post('/send-email', sendConfirmEmail);
 
 // Auth routes
 router.post(

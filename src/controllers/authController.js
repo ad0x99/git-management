@@ -5,10 +5,9 @@ const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const { prepareResponse } = require('../CONST/response');
 const { isEmailExist } = require('../services/UserService');
-const { sendConfirmEmail } = require('../helpers/emailHandler');
+const { sendConfirmEmail } = require('../utils/emailHandler');
 const { confirmEmail } = require('../CONST/emailTemplate');
 const { models } = require('../db');
-const { createOne } = require('../helpers/resourceLoader');
 
 /**
  * It checks if the user is an admin

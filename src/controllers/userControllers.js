@@ -5,7 +5,6 @@ const { prepareResponse } = require('../CONST/response');
 const { isEmailExist } = require('../services/UserService');
 const { isAdmin } = require('./authController');
 const { models } = require('../db');
-const { createOne } = require('../helpers/resourceLoader');
 
 /**
  * It gets all users from the database and returns them to the user
