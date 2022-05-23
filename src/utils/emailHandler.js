@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
+const { logger } = require('../helpers/logger');
 
 dotenv.config();
 
@@ -12,7 +13,11 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendConfirmEmail = async (options) => {
-  await transporter.sendMail({ ...options });
+  try {
+    await transporter.sendMail({ ...options });
+  } catch (err) {
+    logger.error(err);
+  }
 };
 
 module.exports = { sendConfirmEmail };
