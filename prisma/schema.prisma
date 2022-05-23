@@ -13,8 +13,8 @@ datasource db {
 model Class {
   id            String          @id @default(cuid())
   className     String          @db.VarChar(255)
-  host          String
-  Subject       String?
+  host          String          @default(cuid())
+  subject       String?
   startDate     DateTime
   endDate       DateTime
   createdAt     DateTime        @default(now())
@@ -25,10 +25,10 @@ model Class {
 
 model ClassCalendar {
   id             String           @id @default(cuid())
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
   class          Class            @relation(fields: [classId], references: [id])
   classId        String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
   studyDate      DateTime
   UserAttendance UserAttendance[]
 }

@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const userRoutes = require('./routes/user.routes');
+const { userRouter, classRouter } = require('./routes/index');
 
 const main = async () => {
   const app = express();
@@ -14,7 +14,8 @@ const main = async () => {
   app.use(express.json());
 
   // APIs Routes
-  app.use('/api/v1', userRoutes);
+  app.use('/api/v1', userRouter);
+  app.use('/api/v1', classRouter);
 
   // Server & Database
   app.listen(process.env.NODE_PORT, () => {

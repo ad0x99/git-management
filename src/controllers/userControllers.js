@@ -137,7 +137,7 @@ const updateUserInfo = async (req, res) => {
     });
   } catch (error) {
     logger.error(error);
-    return prepareResponse(res, 400, 'Create New User Failed');
+    return prepareResponse(res, 400, 'Update User Info Failed');
   }
 };
 
