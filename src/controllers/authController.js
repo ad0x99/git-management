@@ -8,6 +8,7 @@ const { isEmailExist } = require('../services/UserService');
 const { sendConfirmEmail } = require('../utils/emailHandler');
 const { confirmEmail } = require('../CONST/emailTemplate');
 const { models } = require('../db');
+const { logger } = require('../helpers/logger');
 
 /**
  * It checks if the user is an admin
@@ -30,6 +31,7 @@ const isAdmin = async (req, res) => {
 
     return false;
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 404, 'Get User Context Failed');
   }
 };
@@ -53,6 +55,7 @@ const verifyToken = async (req, res, next) => {
     req.user = verifiedToken;
     next();
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 401, 'Invalid Token');
   }
 };
@@ -113,6 +116,7 @@ const login = async (req, res) => {
       token,
     });
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 401, 'Login Failed');
   }
 };
@@ -167,6 +171,7 @@ const signup = async (req, res) => {
 
     return prepareResponse(res, 201, 'Signup User Successfully', { newUser });
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 400, 'Signup User Failed');
   }
 };
@@ -203,6 +208,7 @@ const activeUser = async (req, res) => {
       userActivated,
     });
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 400, 'Active user failed');
   }
 };

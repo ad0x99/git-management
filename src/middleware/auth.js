@@ -3,6 +3,7 @@ const { Role } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
 const { prepareResponse } = require('../CONST/response');
 const { models } = require('../db');
+const { logger } = require('../helpers/logger');
 
 /**
  * It checks if the user is authenticated and if the user is an admin
@@ -35,7 +36,7 @@ const isAdminPermission = async (req, res, next) => {
 
       next();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return prepareResponse(res, 401, 'Not authorized, token failed');
     }
   }
@@ -73,7 +74,7 @@ const isAuthenticated = async (req, res, next) => {
       req.user = user;
       next();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return prepareResponse(res, 401, 'Not authorized, token failed');
     }
   }

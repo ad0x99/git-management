@@ -5,6 +5,7 @@ const { prepareResponse } = require('../CONST/response');
 const { isEmailExist } = require('../services/UserService');
 const { isAdmin } = require('./authController');
 const { models } = require('../db');
+const { logger } = require('../helpers/logger');
 
 /**
  * It gets all users from the database and returns them to the user
@@ -52,6 +53,7 @@ const getAllUsers = async (req, res) => {
       allUsers,
     });
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 404, 'Users Not Found');
   }
 };
@@ -89,6 +91,7 @@ const createUser = async (req, res) => {
       newUser,
     });
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 400, 'Create New User Failed');
   }
 };
@@ -133,6 +136,7 @@ const updateUserInfo = async (req, res) => {
       userInfo,
     });
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 400, 'Create New User Failed');
   }
 };
@@ -155,6 +159,7 @@ const deleteUser = async (req, res) => {
     await models.user.delete({ where: { id } });
     return prepareResponse(res, 201, 'User is deleted');
   } catch (error) {
+    logger.error(error);
     return prepareResponse(res, 400, 'Delete User Failed');
   }
 };
