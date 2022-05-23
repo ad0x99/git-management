@@ -4,7 +4,7 @@ const buttonGenerate = (
 ) => `<a href="${link}" target="_blank" style="
   border-radius: 5px;
   box-sizing: border-box;
-  color: #03a9f4;
+  color: #121d45;
   cursor: pointer;
   display: inline-block;
   font-size: 14px;
@@ -42,7 +42,7 @@ const confirmEmail = (link, name) => {
             <tr>
                 <td>
                   <p>Hi ${name},</p>
-                  <p>Thank you for signing up for GIT. </p>
+                  <p>Thank you for signing up GIT Club. </p>
                   <p>To confirm your account, you need to click on the following button</p>
                 </td>
             </tr>
