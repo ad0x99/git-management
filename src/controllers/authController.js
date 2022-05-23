@@ -148,21 +148,22 @@ const signup = async (req, res) => {
       },
     );
 
-    const [newUser, emailSender] = await Promise.all([
-      models.user.create({
-        data: { name, email, password: hashedPassword },
-        select: { email: true, name: true },
-      }),
-      sendConfirmEmail({
+    const newUser = await models.user.create({
+      data: { name, email, password: hashedPassword },
+      select: { email: true, name: true },
+    });
+
+    if (newUser) {
+      await sendConfirmEmail({
         from: process.env.EMAIL_USERNAME,
         to: email,
-        subject: 'GIT Club - Please confirm your email address',
+        subject: 'GIT Club - Please verify your account',
         html: confirmEmail(
           `${process.env.CLIENT_URL}${process.env.CONFIRM_EMAIL_PATH}/?token=${accessToken}`,
           name,
         ),
-      }),
-    ]);
+      });
+    }
 
     return prepareResponse(res, 201, 'Signup User Successfully', { newUser });
   } catch (error) {
@@ -184,9 +185,18 @@ const activeUser = async (req, res) => {
       token,
       process.env.CONFIRM_EMAIL_TOKEN_SECRET,
     );
+    const isUserActive = await models.user.findFirst({
+      where: { email: verifiedToken.email },
+    });
+
+    if (isUserActive.active) {
+      return prepareResponse(res, 401, 'User is already active');
+    }
+
     const userActivated = await models.user.update({
       where: { email: verifiedToken.email },
-      data: { $set: { active: true } },
+      data: { active: true },
+      select: { active: true },
     });
 
     return prepareResponse(res, 201, 'Active User Successfully', {
