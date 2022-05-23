@@ -9,11 +9,11 @@ const {
 } = require('../controllers/userControllers');
 const { isAuthenticated, isAdminPermission } = require('../middleware/auth');
 
-const router = express.Router();
+const userRouter = express.Router();
 
 // User routes
-router.get('/users', isAuthenticated, isAdminPermission, getAllUsers);
-router.post(
+userRouter.get('/users', isAuthenticated, isAdminPermission, getAllUsers);
+userRouter.post(
   '/users',
   isAuthenticated,
   isAdminPermission,
@@ -21,29 +21,29 @@ router.post(
   body('password').notEmpty().isLength({ min: 6 }),
   createUser,
 );
-router.put(
+userRouter.put(
   '/users/:id',
   isAuthenticated,
   isAdminPermission,
   body('email').isEmail(),
   updateUserInfo,
 );
-router.delete('/users/:id', isAuthenticated, isAdminPermission, deleteUser);
+userRouter.delete('/users/:id', isAuthenticated, isAdminPermission, deleteUser);
 
 // Auth routes
-router.post(
+userRouter.post(
   '/login',
   body('email').notEmpty().isEmail(),
   body('password').notEmpty(),
   login,
 );
-router.post(
+userRouter.post(
   '/signup',
   body('name').notEmpty().isLength({ min: 5, max: 256 }),
   body('email').notEmpty().isEmail(),
   body('password').notEmpty().isLength({ min: 6, max: 256 }),
   signup,
 );
-router.post('/active', body('token').notEmpty().isJWT(), activeUser);
+userRouter.post('/active', body('token').notEmpty().isJWT(), activeUser);
 
-module.exports = router;
+module.exports = { userRouter };
