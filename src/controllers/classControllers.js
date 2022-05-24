@@ -5,6 +5,52 @@ const { logger } = require('../helpers/logger');
 const { isAdmin } = require('./authController');
 
 /**
+ * It gets a single class info from the database
+ * @param req - The request object.
+ * @param res - The response object.
+ */
+const getOneClass = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const isAdminPermission = await isAdmin(req, res);
+
+    if (!isAdminPermission) {
+      const isUserJoinedClass = await models.classUser.findFirst({
+        where: { classId: id, userId: req.user.id },
+      });
+
+      if (!isUserJoinedClass) {
+        return prepareResponse(
+          res,
+          403,
+          'Access Denied! You have not joined this class',
+        );
+      }
+    }
+
+    const classInfo = await models.class.findFirst({
+      where: { id },
+      include: { file: true },
+    });
+
+    if (!isAdminPermission && String(classInfo.host) !== String(req.user.id)) {
+      return prepareResponse(
+        res,
+        403,
+        'Access Denied! You are not host of this class',
+      );
+    }
+
+    return prepareResponse(res, 200, 'Get Class Info successfully', {
+      classInfo,
+    });
+  } catch (error) {
+    logger.error(error);
+    return prepareResponse(res, 404, 'Classes Not Found');
+  }
+};
+
+/**
  * It gets all the classes from the database
  * @param req - The request object.
  * @param res - The response object.
@@ -159,4 +205,43 @@ const deleteClass = async (req, res) => {
   }
 };
 
-module.exports = { getAllClass, createNewClass, updateClass, deleteClass };
+/**
+ * It takes a class id and a user id, and creates a new classUser record
+ * @param req - The request object.
+ * @param res - The response object.
+ */
+const joinClass = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [isClassExists, isUserExists] = await Promise.all([
+      models.class.findFirst({
+        where: { id },
+      }),
+      models.user.findFirst({
+        where: { id: req.user.id },
+      }),
+    ]);
+
+    if (!isClassExists) {
+      return prepareResponse(res, 404, 'Class not exists');
+    }
+
+    await models.classUser.create({
+      data: { classId: id, userId: isUserExists.id, status: true },
+    });
+    return prepareResponse(res, 200, 'Joined class Successfully');
+  } catch (error) {
+    logger.error(error);
+    return prepareResponse(res, 400, 'Join Class Failed');
+  }
+};
+
+module.exports = {
+  getOneClass,
+  getAllClass,
+  createNewClass,
+  updateClass,
+  deleteClass,
+  joinClass,
+};

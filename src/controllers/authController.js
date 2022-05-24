@@ -22,7 +22,7 @@ const isAdmin = async (req, res) => {
     const verifiedToken = jwt.verify(token, process.env.SECRET_TOKEN);
 
     const user = await models.user.findFirst({
-      where: { _id: verifiedToken.id, roles: Role.ADMIN },
+      where: { id: verifiedToken.id, roles: Role.ADMIN },
     });
 
     if (user) {
@@ -104,7 +104,7 @@ const login = async (req, res) => {
     }
 
     const token = await jwt.sign(
-      { id: userCredential._id, roles: userCredential.roles },
+      { id: userCredential.id, roles: userCredential.roles },
       process.env.SECRET_TOKEN,
       {
         expiresIn: '24h',
