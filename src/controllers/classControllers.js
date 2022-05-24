@@ -11,7 +11,9 @@ const { isAdmin } = require('./authController');
  */
 const getAllClass = async (req, res) => {
   try {
-    const allClasses = await models.class.findMany();
+    const allClasses = await models.class.findMany({
+      include: { file: true },
+    });
     const count = allClasses.length;
 
     return prepareResponse(res, 200, 'Get all classes successfully', {
@@ -31,10 +33,12 @@ const getAllClass = async (req, res) => {
  */
 const createNewClass = async (req, res) => {
   const { host, className, subject, startDate, endDate } = req.body;
+  const file = req.file.path;
 
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      logger.error(errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -53,8 +57,17 @@ const createNewClass = async (req, res) => {
       },
     });
 
+    let fileUpload = null;
+
+    if (file && newClass) {
+      fileUpload = await models.fileStorage.create({
+        data: { classId: newClass.id, link: file },
+      });
+    }
+
     return prepareResponse(res, 201, 'Created New Class Successfully', {
-      newClass,
+      ...newClass,
+      file: [{ link: fileUpload.link }],
     });
   } catch (error) {
     logger.error(error);
@@ -70,6 +83,8 @@ const createNewClass = async (req, res) => {
 const updateClass = async (req, res) => {
   const { host, className, subject, startDate, endDate } = req.body;
   const { id } = req.params;
+  const file = req.file.path;
+
   let params = {};
 
   try {
@@ -94,12 +109,25 @@ const updateClass = async (req, res) => {
       params = { className, subject, startDate, endDate };
     }
 
-    const classInfo = await models.class.update({
-      where: { id },
-      data: { ...params },
-    });
+    if (file) {
+      await models.fileStorage.create({
+        data: { classId: id, link: file },
+      });
+    }
+
+    const [classInfo, getAllFiles] = await Promise.all([
+      models.class.update({
+        where: { id },
+        data: { ...params },
+      }),
+      models.fileStorage.findMany({
+        where: { classId: id },
+      }),
+    ]);
+
     return prepareResponse(res, 201, 'Update Class Info Successfully', {
-      classInfo,
+      ...classInfo,
+      file: { ...getAllFiles },
     });
   } catch (error) {
     logger.error(error);
@@ -122,8 +150,9 @@ const deleteClass = async (req, res) => {
       return prepareResponse(res, 404, 'Class not exists');
     }
 
+    await models.fileStorage.deleteMany({ where: { classId: id } });
     await models.class.delete({ where: { id } });
-    return prepareResponse(res, 201, 'Class is deleted');
+    return prepareResponse(res, 201, 'Deleted class and related its data');
   } catch (error) {
     logger.error(error);
     return prepareResponse(res, 400, 'Delete Class Failed');

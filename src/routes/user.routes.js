@@ -1,5 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
+const multer = require('multer');
+const { prepareResponse } = require('../CONST/response');
 const { login, signup, activeUser } = require('../controllers/authController');
 const {
   createUser,

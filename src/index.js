@@ -1,6 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 const { userRouter, classRouter } = require('./routes/index');
 
 const main = async () => {
@@ -19,6 +21,13 @@ const main = async () => {
 
   // Server & Database
   app.listen(process.env.NODE_PORT, () => {
+    const uploadPath = './uploads/';
+    const isPathExists = fs.existsSync(path.resolve(uploadPath));
+    if (!isPathExists) {
+      console.log('Create uploads folder');
+      fs.mkdirSync(uploadPath);
+    }
+
     console.log(
       `Server is running on http://${process.env.NODE_HOST}:${process.env.NODE_PORT}/`,
     );

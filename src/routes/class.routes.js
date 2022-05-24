@@ -7,6 +7,7 @@ const {
   deleteClass,
 } = require('../controllers/classControllers');
 const { isAuthenticated, isAdminPermission } = require('../middleware/auth');
+const { upload } = require('../utils/upload');
 
 const classRouter = express.Router();
 
@@ -16,8 +17,10 @@ classRouter.post(
   '/class',
   isAuthenticated,
   isAdminPermission,
+  upload.single('file'),
   body('host').notEmpty().isUUID().isLength({ min: 5 }),
   body('className').notEmpty().isLength({ min: 5 }),
+  body('subject').notEmpty().isLength({ min: 5 }),
   body('startDate').notEmpty().isDate(),
   body('endDate').notEmpty().isDate(),
   createNewClass,
@@ -27,6 +30,7 @@ classRouter.put(
   '/class/:id',
   isAuthenticated,
   isAdminPermission,
+  upload.single('file'),
   body('className').notEmpty().isLength({ min: 5 }),
   body('startDate').notEmpty().isDate(),
   body('endDate').notEmpty().isDate(),
