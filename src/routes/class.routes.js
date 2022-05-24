@@ -5,6 +5,8 @@ const {
   createNewClass,
   updateClass,
   deleteClass,
+  joinClass,
+  getOneClass,
 } = require('../controllers/classControllers');
 const { isAuthenticated, isAdminPermission } = require('../middleware/auth');
 const { upload } = require('../utils/upload');
@@ -13,6 +15,8 @@ const classRouter = express.Router();
 
 // Class routes
 classRouter.get('/class', isAuthenticated, isAdminPermission, getAllClass);
+classRouter.get('/class/:id', isAuthenticated, getOneClass);
+
 classRouter.post(
   '/class',
   isAuthenticated,
@@ -26,6 +30,8 @@ classRouter.post(
   createNewClass,
 );
 
+classRouter.post('/join-class/:id', isAuthenticated, joinClass);
+
 classRouter.put(
   '/class/:id',
   isAuthenticated,
@@ -36,6 +42,7 @@ classRouter.put(
   body('endDate').notEmpty().isDate(),
   updateClass,
 );
+
 classRouter.delete(
   '/class/:id',
   isAuthenticated,
