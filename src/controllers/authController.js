@@ -152,22 +152,20 @@ const signup = async (req, res) => {
       },
     );
 
+    await sendConfirmEmail({
+      from: process.env.EMAIL_USERNAME,
+      to: email,
+      subject: 'GIT Club - Please verify your account',
+      html: confirmEmail(
+        `${process.env.CLIENT_URL}${process.env.CONFIRM_EMAIL_PATH}/?token=${accessToken}`,
+        name,
+      ),
+    });
+
     const newUser = await models.user.create({
       data: { name, email, password: hashedPassword },
       select: { email: true, name: true },
     });
-
-    if (newUser) {
-      await sendConfirmEmail({
-        from: process.env.EMAIL_USERNAME,
-        to: email,
-        subject: 'GIT Club - Please verify your account',
-        html: confirmEmail(
-          `${process.env.CLIENT_URL}${process.env.CONFIRM_EMAIL_PATH}/?token=${accessToken}`,
-          name,
-        ),
-      });
-    }
 
     return prepareResponse(res, 201, 'Signup User Successfully', { newUser });
   } catch (error) {
