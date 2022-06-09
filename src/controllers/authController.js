@@ -1,6 +1,5 @@
 // @ts-nocheck
 const bcrypt = require('bcryptjs');
-const { Role } = require('@prisma/client');
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const { prepareResponse } = require('../CONST/response');
@@ -9,32 +8,6 @@ const { sendConfirmEmail } = require('../utils/emailHandler');
 const { confirmEmail } = require('../CONST/emailTemplate');
 const { models } = require('../db');
 const { logger } = require('../helpers/logger');
-
-/**
- * It checks if the user is an admin
- * @param req - The request object
- * @param res - The response object
- * @returns A function that takes in a request and a response object.
- */
-const isAdmin = async (req, res) => {
-  try {
-    const token = req.headers.authorization.split(' ')[1];
-    const verifiedToken = jwt.verify(token, process.env.SECRET_TOKEN);
-
-    const user = await models.user.findFirst({
-      where: { id: verifiedToken.id, roles: Role.ADMIN },
-    });
-
-    if (user) {
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    logger.error(error);
-    return prepareResponse(res, 404, 'Get User Context Failed');
-  }
-};
 
 /**
  * Verify token from request headers
@@ -215,6 +188,5 @@ module.exports = {
   login,
   signup,
   verifyToken,
-  isAdmin,
   activeUser,
 };

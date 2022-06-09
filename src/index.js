@@ -3,9 +3,12 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const schedule = require('node-schedule');
 const { userRouter, classRouter } = require('./routes/index');
 const { models } = require('./db');
 const { logger } = require('./helpers/logger');
+const { classUserRouter } = require('./routes/classUser.routes');
+// const { getAllActiveClassUser } = require('./controllers/classUserControllers');
 
 const main = async () => {
   const app = express();
@@ -20,15 +23,24 @@ const main = async () => {
   // APIs Routes
   app.use('/api/v1', userRouter);
   app.use('/api/v1', classRouter);
+  app.use('/api/v1', classUserRouter);
 
   // Server & Database
   app.listen(process.env.NODE_PORT, async () => {
     const uploadPath = './uploads/';
+    // const time = '*/10 * * * * *';
+
     const isPathExists = fs.existsSync(path.resolve(uploadPath));
     if (!isPathExists) {
       console.log('Create uploads folder');
       fs.mkdirSync(uploadPath);
     }
+
+    // schedule.scheduleJob(time, async () => {
+    //   console.log(new Date().toISOString().slice(0, 10));
+    //   await getAllActiveClassUser();
+    //   console.log('The world is going to end today.');
+    // });
 
     await models
       .$connect()

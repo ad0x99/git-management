@@ -3,7 +3,6 @@ const { Role } = require('@prisma/client');
 const { validationResult } = require('express-validator');
 const { prepareResponse } = require('../CONST/response');
 const { isEmailExist } = require('../services/UserService');
-const { isAdmin } = require('./authController');
 const { models } = require('../db');
 const { logger } = require('../helpers/logger');
 
@@ -21,7 +20,6 @@ const getAllUsers = async (req, res) => {
 
   try {
     const conditions = {};
-    const isAdminRole = await isAdmin(req, res);
     if (page && size) {
       conditions.AND = {
         limit: pageSize,
@@ -29,8 +27,8 @@ const getAllUsers = async (req, res) => {
       };
     }
 
-    if (!isAdminRole) {
-      conditions.roles = Role.ADMIN;
+    if (req.user.roles !== Role.ADMIN) {
+      conditions.roles = Role.USER;
     }
 
     const allUsers = await models.user.findMany({
@@ -108,7 +106,6 @@ const updateUserInfo = async (req, res) => {
 
   try {
     const user = await models.user.findUnique({ where: { id } });
-    const isAdminRole = await isAdmin(req, res);
 
     if (!user) {
       return prepareResponse(res, 404, 'User not exists');
@@ -122,7 +119,7 @@ const updateUserInfo = async (req, res) => {
       );
     }
 
-    if (isAdminRole) {
+    if (req.user.roles !== Role.ADMIN) {
       params = { name };
     } else {
       params = { ...req.body };
