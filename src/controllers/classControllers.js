@@ -59,7 +59,7 @@ const getOneClass = async (req, res) => {
 const getAllClass = async (req, res) => {
   try {
     const allClasses = await models.class.findMany({
-      include: { file: true },
+      include: { file: true, classUser: true },
     });
     const count = allClasses.length;
 
