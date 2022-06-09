@@ -17,6 +17,7 @@ const sendConfirmEmail = async (options) => {
     await transporter.sendMail({ ...options });
   } catch (err) {
     logger.error(err);
+    throw new Error(err.message);
   }
 };
 
