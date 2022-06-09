@@ -4,6 +4,8 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const { userRouter, classRouter } = require('./routes/index');
+const { models } = require('./db');
+const { logger } = require('./helpers/logger');
 
 const main = async () => {
   const app = express();
@@ -20,13 +22,21 @@ const main = async () => {
   app.use('/api/v1', classRouter);
 
   // Server & Database
-  app.listen(process.env.NODE_PORT, () => {
+  app.listen(process.env.NODE_PORT, async () => {
     const uploadPath = './uploads/';
     const isPathExists = fs.existsSync(path.resolve(uploadPath));
     if (!isPathExists) {
       console.log('Create uploads folder');
       fs.mkdirSync(uploadPath);
     }
+
+    await models
+      .$connect()
+      .then(() => console.log('DB Connected'))
+      .catch((e) => {
+        logger.error(e);
+        console.log(e);
+      });
 
     console.log(
       `Server is running on http://${process.env.NODE_HOST}:${process.env.NODE_PORT}/`,
