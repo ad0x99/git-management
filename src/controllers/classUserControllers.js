@@ -59,30 +59,6 @@ const getAllClassUser = async (req, res) => {
   }
 };
 
-// const getAllActiveClassUser = async () => {
-//   try {
-//     const allClassesUser = await models.class.findMany({
-//       include: { classUser: true },
-//     });
-//     const emails = [];
-
-//     for (const classUser of allClassesUser) {
-//       for (const user of classUser.classUser) {
-//         const userEmail = await models.user.findFirst({
-//           where: { id: user.userId },
-//         });
-
-//         emails.push(userEmail.email);
-//       }
-//     }
-
-//     console.log(emails);
-//   } catch (error) {
-//     logger.error(error);
-//     throw new Error(error.message);
-//   }
-// };
-
 module.exports = {
   getOneClassUser,
   getAllClassUser,
