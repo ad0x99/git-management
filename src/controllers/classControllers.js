@@ -3,7 +3,6 @@ const { validationResult } = require('express-validator');
 const { prepareResponse } = require('../CONST/response');
 const { models } = require('../db');
 const { logger } = require('../helpers/logger');
-const { isAdmin } = require('./authController');
 
 /**
  * It gets a single class info from the database
@@ -13,9 +12,7 @@ const { isAdmin } = require('./authController');
 const getOneClass = async (req, res) => {
   const { id } = req.params;
   try {
-    const isAdminPermission = await isAdmin(req, res);
-
-    if (!isAdminPermission) {
+    if (req.user.roles !== Role.ADMIN) {
       const isUserJoinedClass = await models.classUser.findFirst({
         where: { classId: id, userId: req.user.id },
       });
@@ -34,7 +31,10 @@ const getOneClass = async (req, res) => {
       include: { file: true },
     });
 
-    if (!isAdminPermission && String(classInfo.host) !== String(req.user.id)) {
+    if (
+      req.user.roles !== Role.ADMIN &&
+      String(classInfo.host) !== String(req.user.id)
+    ) {
       return prepareResponse(
         res,
         403,
@@ -140,8 +140,6 @@ const updateClass = async (req, res) => {
       models.user.findFirst({ where: { id: host } }),
     ]);
 
-    const isAdminRole = await isAdmin(req, res);
-
     if (!isClassExists) {
       return prepareResponse(res, 404, 'Class not exists');
     }
@@ -150,7 +148,7 @@ const updateClass = async (req, res) => {
       return prepareResponse(res, 404, 'User not exists');
     }
 
-    if (isAdminRole) {
+    if (req.user.roles !== Role.ADMIN) {
       params = { host, className, subject, startDate, endDate };
     } else {
       params = { className, subject, startDate, endDate };
