@@ -38,9 +38,11 @@ model UserAttendance {
   id              String        @id @default(cuid())
   user            User          @relation(fields: [userId], references: [id])
   userId          String
-  status          String
+  status          Int           @default(-1)
   classCalendar   ClassCalendar @relation(fields: [classCalendarId], references: [id])
   classCalendarId String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now())
 }
 
 model ClassUser {
