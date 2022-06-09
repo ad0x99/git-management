@@ -1,3 +1,4 @@
+const { Role } = require('@prisma/client');
 const { validationResult } = require('express-validator');
 const { prepareResponse } = require('../CONST/response');
 const { models } = require('../db');
@@ -225,6 +226,13 @@ const joinClass = async (req, res) => {
 
     if (!isClassExists) {
       return prepareResponse(res, 404, 'Class not exists');
+    }
+
+    if (
+      isClassExists.host === req.user.id ||
+      isUserExists.roles === Role.ADMIN
+    ) {
+      return prepareResponse(res, 403, 'You can not join the class as a user');
     }
 
     await models.classUser.create({
