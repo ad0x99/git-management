@@ -2,27 +2,27 @@ const express = require('express');
 const { body } = require('express-validator');
 const {
   checkAttendedOrAbsent,
-  checkAttendanceMany,
+  checkAttendanceManyUsers,
   getAllAttendances,
 } = require('../controllers/attendanceController');
-const { isAuthenticated } = require('../middleware/auth');
+const { isAuthenticated, isAdminPermission } = require('../middleware/auth');
 
 const attendanceRouter = express.Router();
 
 attendanceRouter.get('/attendances', isAuthenticated, getAllAttendances);
 
 attendanceRouter.post(
-  '/check-attendance/:idUserAttendance',
+  '/attendances/user/:userAttendanceId',
   isAuthenticated,
+  isAdminPermission,
   body('isAttendance').notEmpty().isBoolean(),
   checkAttendedOrAbsent,
 );
 
 attendanceRouter.post(
-  '/check-attendance-many/:idClassCalendar',
+  '/attendances/class/:classCalendarId',
   isAuthenticated,
-  body('isAttendanceArray').notEmpty().isArray(),
-  checkAttendanceMany,
+  checkAttendanceManyUsers,
 );
 
 module.exports = { attendanceRouter };

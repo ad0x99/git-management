@@ -22,96 +22,68 @@ const getAllAttendances = async (req, res) => {
 };
 
 const checkAttendedOrAbsent = async (req, res) => {
-  const { idUserAttendance } = req.params;
+  const { userAttendanceId } = req.params;
   const { isAttendance } = req.body;
 
   try {
     const isExistAttendanceUser = await models.userAttendance.findFirst({
-      where: { id: idUserAttendance },
+      where: { id: userAttendanceId },
     });
 
     if (!isExistAttendanceUser) {
-      return prepareResponse(res, 404, 'Attendance User is not exist');
+      return prepareResponse(res, 404, 'User Attendance is not exist');
     }
 
-    if (isAttendance === undefined) {
-      return prepareResponse(res, 404, 'Bad request');
+    if (isAttendance !== true || isAttendance === false) {
+      return prepareResponse(res, 400, 'Bad request');
     }
 
-    await models.userAttendance.update({
-      where: { id: idUserAttendance },
+    const attendance = await models.userAttendance.update({
+      where: { id: userAttendanceId },
       data: { status: isAttendance },
+      include: {
+        classCalendar: { select: { id: true, classId: true } },
+        user: { select: { id: true, name: true } },
+      },
     });
 
-    return prepareResponse(res, 201, 'Check Attendance Successfully');
+    return prepareResponse(res, 201, 'Check Attendance Successfully', {
+      data: attendance,
+    });
   } catch (err) {
     logger.error(err);
     return prepareResponse(res, 401, 'Check Attendance Failed');
   }
 };
 
-const checkAttendanceMany = async (req, res) => {
-  const { idClassCalendar } = req.params;
-  const { isAttendanceArray } = req.body;
+const checkAttendanceManyUsers = async (req, res) => {
+  const { classCalendarId } = req.params;
 
   try {
-    const isClassCalendar = await models.classCalendar.findFirst({
-      where: { id: idClassCalendar },
+    const isClassCalendarExists = await models.classCalendar.findFirst({
+      where: { id: classCalendarId },
     });
 
-    if (!isClassCalendar) {
+    if (!isClassCalendarExists) {
       return prepareResponse(res, 404, 'Class Calendar is not exist');
     }
 
-    if (!isAttendanceArray.length) {
-      return prepareResponse(res, 400, 'Bad request');
-    }
-
-    const attendances = { attendanceUser: [], absentUser: [] };
-
-    // isAttendanceArray.reduce((pV, cV) => {
-    //   return cV.isAttendance
-    //     ? { ...pV, attendanceUser: [...pV.attendanceUser, cV.id] }
-    //     : { ...pV, absentUser: [...pV.absentUser, cV.id] };
-    // }, attendances);
-
-    console.log(attendances);
-
-    const [attendanceUser, absentUser] = await models.$transaction([
-      models.userAttendance.updateMany({
-        where: {
-          id: {
-            in: attendances.attendanceUser,
-          },
-        },
-        data: {
-          status: true,
-        },
-      }),
-      models.userAttendance.updateMany({
-        where: {
-          id: {
-            in: attendances.absentUser,
-          },
-        },
-        data: {
-          status: false,
-        },
-      }),
-    ]);
+    const attendanceAllUsers = await models.userAttendance.updateMany({
+      where: { classCalendarId },
+      data: { status: true },
+    });
 
     return prepareResponse(res, 201, 'Check Attendances Successfully', {
-      ...attendanceUser,
-      ...absentUser,
+      data: attendanceAllUsers,
     });
   } catch (err) {
     logger.error(err);
-    return prepareResponse(res, 400, 'Check Attendances Failed');
+    return prepareResponse(res, 401, 'Check Attendances Failed');
   }
 };
 
 module.exports = {
   checkAttendedOrAbsent,
-  checkAttendanceMany,
+  checkAttendanceManyUsers,
   getAllAttendances,
 };

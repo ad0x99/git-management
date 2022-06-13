@@ -99,7 +99,6 @@ const createCalendar = async (req, res) => {
     });
   } catch (err) {
     logger.error(err);
-    console.error(err.message);
     return prepareResponse(res, 400, 'Create Class Calendar Failed');
   }
 };
