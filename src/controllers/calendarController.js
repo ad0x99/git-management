@@ -1,3 +1,4 @@
+// @ts-nocheck
 const { validationResult } = require('express-validator');
 const { prepareResponse } = require('../CONST/response');
 const { models } = require('../db');
@@ -5,10 +6,12 @@ const { logger } = require('../helpers/logger');
 
 const getOneCalendar = async (req, res) => {
   const { id } = req.params;
+
   try {
     const calendar = await models.classCalendar.findFirst({
-      where: { id: id },
+      where: { id },
     });
+
     if (!calendar) {
       return prepareResponse(res, 404, 'Class calendar not found!');
     }
@@ -18,28 +21,26 @@ const getOneCalendar = async (req, res) => {
     });
 
     return prepareResponse(res, 200, 'Get class calendar successfully', {
-      result: { calendar: calendar, userAttendance: userAttendance },
+      data: { ...calendar, ...userAttendance },
       meta: { total: userAttendance.length, limit: 0, offset: 0 },
     });
   } catch (err) {
     logger.error(err);
-    return prepareResponse(res, 500, 'System server error!');
+    return prepareResponse(res, 400, 'System server error!');
   }
 };
 
 const getAllCalendar = async (req, res) => {
-  const classId = req.params.classId;
   try {
-    const calendar = await models.classCalendar.findMany({
-      where: { classId: classId ? { equals: classId } : { notIn: null } },
-    });
-    return prepareResponse(res, 200, 'Get all calendar successfully', {
-      result: { calendars: calendar },
+    const calendar = await models.classCalendar.findMany();
+
+    return prepareResponse(res, 200, 'Get All Calendars Successfully', {
+      data: calendar ? [...calendar] : [],
       meta: { total: calendar.length, limit: 0, offset: 0 },
     });
   } catch (error) {
     logger.error(error);
-    return prepareResponse(res, 500, 'System server error!');
+    return prepareResponse(res, 400, 'Get all Calendars Failed');
   }
 };
 
@@ -56,70 +57,78 @@ const createCalendar = async (req, res) => {
     const isClassExists = await models.class.findFirst({
       where: { id: classId },
     });
+
     if (!isClassExists) {
       return prepareResponse(res, 400, 'Class not found');
     }
 
     // Create new class calendar
-    const newCalendar = await models.classCalendar.create({
+    const formatStudyDate = new Date(studyDate).toISOString();
+    const newClassCalendar = await models.classCalendar.create({
       data: {
         classId,
-        studyDate,
+        studyDate: formatStudyDate,
       },
     });
 
     // Get all users in the class
-    const userClass = await models.classUser.findMany({
+    const userClasses = await models.classUser.findMany({
       where: {
-        classId: classId,
+        classId,
       },
       select: {
-        userId,
+        userId: true,
       },
     });
 
-    // Add all attendance in the class for users
-    const newCalendarAttendance = models.userAttendance.createMany({
-      data: userClass.map((i) => {
-        userId: i;
-        classCalendarId: newCalendar.id;
-      }),
-    });
+    // Check attendance for users in class
+    // By default, all user's status in the class will be set to true
+    // It means user will be able to join the class
+    if (userClasses) {
+      userClasses.map(
+        async (user) =>
+          await models.userAttendance.create({
+            data: { userId: user.userId, classCalendarId: newClassCalendar.id },
+          }),
+      );
+    }
 
-    return prepareResponse(res, 201, 'Create successfully', {
-      calendar: newCalendar,
-      users: newCalendarAttendance,
+    return prepareResponse(res, 201, 'Create Class Calendar Successfully', {
+      calendar: newClassCalendar,
+      users: userClasses,
     });
   } catch (err) {
     logger.error(err);
-    return prepareResponse(res, 500, 'System server error!');
+    console.error(err.message);
+    return prepareResponse(res, 400, 'Create Class Calendar Failed');
   }
 };
 
 const deleteCalendar = async (req, res) => {
   const { id } = req.params;
+
   try {
     const calendar = await models.classCalendar.findFirst({ where: { id } });
+
     if (!calendar) {
       return prepareResponse(res, 404, 'Calendar not found!');
     }
-    // Chưa nắm rõ cách dùng transaction của prisma. Xóa calendar và tất cả các record về attendance của user.
+
     await models.$transaction([
-      prisma.userAttendance.deleteMany({ where: { classCalendarId: id } }),
-      prisma.classCalendar.delete({ where: { id } }),
+      models.userAttendance.deleteMany({ where: { classCalendarId: id } }),
+      models.classCalendar.delete({ where: { id } }),
     ]);
 
-    return prepareResponse(res, 201, 'Delete Successfully!');
+    return prepareResponse(res, 201, 'Delete Class Calendar Successfully!');
   } catch (error) {
     logger.error(error);
-    return prepareResponse(res, 500, 'System server error!');
+    return prepareResponse(res, 400, 'Delete Class Calendar');
   }
 };
 
-
-modules.exports = {
+module.exports = {
   createCalendar,
   deleteCalendar,
   getAllCalendar,
-  getOneCalendar
-}
+  getOneCalendar,
+};
