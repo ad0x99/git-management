@@ -46,7 +46,14 @@ const getOneClassUser = async (req, res) => {
  */
 const getAllClassUser = async (req, res) => {
   try {
-    const allClassesUser = await models.classUser.findMany();
+    const allClassesUser = await models.classUser.findMany({
+      include: {
+        user: { select: { id: true, name: true } },
+        class: {
+          select: { id: true, className: true, host: true, subject: true },
+        },
+      },
+    });
     const count = allClassesUser.length;
 
     return prepareResponse(res, 200, 'Get all classes user successfully', {
