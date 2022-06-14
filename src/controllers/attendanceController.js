@@ -4,6 +4,11 @@ const { models } = require('../db');
 const { logger } = require('../helpers/logger');
 const { hasPermissionOnClass } = require('../middleware/auth');
 
+/**
+ * It gets all attendances of a class
+ * @param req - the request object
+ * @param res - the response object
+ */
 const getAllAttendancesOfClass = async (req, res) => {
   const { classId } = req.params;
 
@@ -31,6 +36,12 @@ const getAllAttendancesOfClass = async (req, res) => {
   }
 };
 
+/**
+ * It gets all the attendances from the database
+ * @param req - The request object.
+ * @param res - The response object.
+ * @returns An array of objects.
+ */
 const getAllAttendances = async (req, res) => {
   try {
     const attendances = await models.userAttendance.findMany({
@@ -50,6 +61,11 @@ const getAllAttendances = async (req, res) => {
   }
 };
 
+/**
+ * Check attendance of user in class calendar
+ * @param req - The request object.
+ * @param res - the response object
+ */
 const checkAttendedOrAbsent = async (req, res) => {
   const { userAttendanceId } = req.params;
   const { isAttendance } = req.body;
@@ -96,6 +112,11 @@ const checkAttendedOrAbsent = async (req, res) => {
   }
 };
 
+/**
+ * Check attendance for many users in a class calendar
+ * @param req - The request object.
+ * @param res - The response object.
+ */
 const checkAttendanceManyUsers = async (req, res) => {
   const { classCalendarId } = req.params;
 

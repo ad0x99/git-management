@@ -5,6 +5,11 @@ const { models } = require('../db');
 const { logger } = require('../helpers/logger');
 const { hasPermissionOnClass } = require('../middleware/auth');
 
+/**
+ * It gets a class calendar by id
+ * @param req - The request object.
+ * @param res - the response object
+ */
 const getOneCalendar = async (req, res) => {
   const { id } = req.params;
 
@@ -42,6 +47,12 @@ const getOneCalendar = async (req, res) => {
   }
 };
 
+/**
+ * It gets all the calendars from the database
+ * @param req - The request object.
+ * @param res - The response object
+ * @returns An array of objects
+ */
 const getAllCalendar = async (req, res) => {
   try {
     const calendar = await models.classCalendar.findMany();
@@ -56,6 +67,11 @@ const getAllCalendar = async (req, res) => {
   }
 };
 
+/**
+ * Create a new class calendar and set all users' attendance status to true
+ * @param req - The request object.
+ * @param res - response object
+ */
 const createCalendar = async (req, res) => {
   const { classId, studyDate } = req.body;
 
@@ -126,6 +142,11 @@ const createCalendar = async (req, res) => {
   }
 };
 
+/**
+ * It deletes a class calendar and all the attendance records associated with it
+ * @param req - The request object.
+ * @param res - The response object
+ */
 const deleteCalendar = async (req, res) => {
   const { id } = req.params;
 

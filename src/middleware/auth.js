@@ -84,6 +84,14 @@ const isAuthenticated = async (req, res, next) => {
   }
 };
 
+/**
+ * It checks if the user has permission to perform an action on a class
+ * @param req - The request object
+ * @param res - The response object
+ * @param action - The action that the user is trying to perform.
+ * @param arg - The id of the object you want to check.
+ * @returns A function that takes in a request, response, action, and arg.
+ */
 const hasPermissionOnClass = async (req, res, action, arg) => {
   const { id } = req.user;
 

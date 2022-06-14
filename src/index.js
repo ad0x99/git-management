@@ -3,12 +3,15 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const { userRouter, classRouter } = require('./routes/index');
+const {
+  userRouter,
+  classRouter,
+  classUserRouter,
+  calendarRouter,
+  attendanceRouter,
+} = require('./routes/index');
 const { models } = require('./db');
 const { logger } = require('./helpers/logger');
-const { classUserRouter } = require('./routes/classUser.routes');
-const { calendarRouter } = require('./routes/calendar.routes');
-const { attendanceRouter } = require('./routes/attendance.routes');
 
 const main = async () => {
   const app = express();
