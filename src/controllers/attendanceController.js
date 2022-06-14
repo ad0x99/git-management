@@ -1,7 +1,47 @@
-const { prepareResponse } = require('../CONST/response');
+const { Prisma } = require('@prisma/client');
+const { prepareResponse, ACTION } = require('../CONST/response');
 const { models } = require('../db');
 const { logger } = require('../helpers/logger');
+const { hasPermissionOnClass } = require('../middleware/auth');
 
+/**
+ * It gets all attendances of a class
+ * @param req - the request object
+ * @param res - the response object
+ */
+const getAllAttendancesOfClass = async (req, res) => {
+  const { classId } = req.params;
+
+  try {
+    const data = await models.$queryRaw`
+    SELECT 
+      class.id as classId, ua.id as attendanceId, ua.classCalendarId as calendarId, ua.userId, class.className as className, class.host as host, ua.status as status,class.startDate as startDate, class.endDate as endDate
+    FROM UserAttendance AS ua
+      LEFT OUTER JOIN ClassCalendar AS cc ON cc.id = ua.classCalendarId
+      LEFT OUTER JOIN Class AS class ON class.id = cc.classId
+    WHERE 
+      class.id = ${classId}`;
+
+    return prepareResponse(
+      res,
+      200,
+      'Get All Attendances of Class Successfully',
+      {
+        data: data ? data : [],
+      },
+    );
+  } catch (error) {
+    logger.error(error);
+    return prepareResponse(res, 400, 'Get All Attendances of Class Failed');
+  }
+};
+
+/**
+ * It gets all the attendances from the database
+ * @param req - The request object.
+ * @param res - The response object.
+ * @returns An array of objects.
+ */
 const getAllAttendances = async (req, res) => {
   try {
     const attendances = await models.userAttendance.findMany({
@@ -21,11 +61,27 @@ const getAllAttendances = async (req, res) => {
   }
 };
 
+/**
+ * Check attendance of user in class calendar
+ * @param req - The request object.
+ * @param res - the response object
+ */
 const checkAttendedOrAbsent = async (req, res) => {
   const { userAttendanceId } = req.params;
   const { isAttendance } = req.body;
 
   try {
+    const hasPermission = await hasPermissionOnClass(
+      req,
+      res,
+      ACTION.USER_ATTENDANCE,
+      userAttendanceId,
+    );
+
+    if (!hasPermission) {
+      return prepareResponse(res, 403, 'Access Denied');
+    }
+
     const isExistAttendanceUser = await models.userAttendance.findFirst({
       where: { id: userAttendanceId },
     });
@@ -34,7 +90,7 @@ const checkAttendedOrAbsent = async (req, res) => {
       return prepareResponse(res, 404, 'User Attendance is not exist');
     }
 
-    if (isAttendance !== true || isAttendance === false) {
+    if (isAttendance === undefined || isAttendance === null) {
       return prepareResponse(res, 400, 'Bad request');
     }
 
@@ -56,10 +112,26 @@ const checkAttendedOrAbsent = async (req, res) => {
   }
 };
 
+/**
+ * Check attendance for many users in a class calendar
+ * @param req - The request object.
+ * @param res - The response object.
+ */
 const checkAttendanceManyUsers = async (req, res) => {
   const { classCalendarId } = req.params;
 
   try {
+    const hasPermission = await hasPermissionOnClass(
+      req,
+      res,
+      ACTION.CLASS_CALENDAR,
+      classCalendarId,
+    );
+
+    if (!hasPermission) {
+      return prepareResponse(res, 403, 'Access Denied');
+    }
+
     const isClassCalendarExists = await models.classCalendar.findFirst({
       where: { id: classCalendarId },
     });
@@ -86,4 +158,5 @@ module.exports = {
   checkAttendedOrAbsent,
   checkAttendanceManyUsers,
   getAllAttendances,
+  getAllAttendancesOfClass,
 };
