@@ -1,6 +1,6 @@
 const express = require('express');
-const { body, param } = require('express-validator');
-const { isAuthenticated } = require('../middleware/auth');
+const { body } = require('express-validator');
+const { isAuthenticated, isAdminPermission } = require('../middleware/auth');
 const {
   getAllCalendar,
   getOneCalendar,
@@ -10,7 +10,12 @@ const {
 
 const calendarRouter = express.Router();
 
-calendarRouter.get('/calendar', isAuthenticated, getAllCalendar);
+calendarRouter.get(
+  '/calendar',
+  isAuthenticated,
+  isAdminPermission,
+  getAllCalendar,
+);
 calendarRouter.get('/calendar/:id', isAuthenticated, getOneCalendar);
 
 calendarRouter.post(

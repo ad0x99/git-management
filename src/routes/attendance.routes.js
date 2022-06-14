@@ -4,17 +4,27 @@ const {
   checkAttendedOrAbsent,
   checkAttendanceManyUsers,
   getAllAttendances,
+  getAllAttendancesOfClass,
 } = require('../controllers/attendanceController');
 const { isAuthenticated, isAdminPermission } = require('../middleware/auth');
 
 const attendanceRouter = express.Router();
 
-attendanceRouter.get('/attendances', isAuthenticated, getAllAttendances);
+attendanceRouter.get(
+  '/attendances/:classId',
+  isAuthenticated,
+  getAllAttendancesOfClass,
+);
+attendanceRouter.get(
+  '/attendances',
+  isAuthenticated,
+  isAdminPermission,
+  getAllAttendances,
+);
 
 attendanceRouter.post(
   '/attendances/user/:userAttendanceId',
   isAuthenticated,
-  isAdminPermission,
   body('isAttendance').notEmpty().isBoolean(),
   checkAttendedOrAbsent,
 );

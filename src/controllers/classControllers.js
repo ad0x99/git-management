@@ -33,6 +33,7 @@ const getOneClass = async (req, res) => {
 
     if (
       req.user.roles !== Role.ADMIN &&
+      classInfo &&
       String(classInfo.host) !== String(req.user.id)
     ) {
       return prepareResponse(
@@ -114,7 +115,7 @@ const createNewClass = async (req, res) => {
 
     return prepareResponse(res, 201, 'Created New Class Successfully', {
       ...newClass,
-      file: [{ link: fileUpload.link }],
+      file: [{ link: fileUpload ? fileUpload.link : '' }],
     });
   } catch (error) {
     logger.error(error);
@@ -224,6 +225,10 @@ const joinClass = async (req, res) => {
 
     if (!isClassExists) {
       return prepareResponse(res, 404, 'Class not exists');
+    }
+
+    if (!isUserExists) {
+      return prepareResponse(res, 404, 'User not exists');
     }
 
     if (

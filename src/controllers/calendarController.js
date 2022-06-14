@@ -1,13 +1,25 @@
 // @ts-nocheck
 const { validationResult } = require('express-validator');
-const { prepareResponse } = require('../CONST/response');
+const { prepareResponse, ACTION } = require('../CONST/response');
 const { models } = require('../db');
 const { logger } = require('../helpers/logger');
+const { hasPermissionOnClass } = require('../middleware/auth');
 
 const getOneCalendar = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const hasPermission = await hasPermissionOnClass(
+      req,
+      res,
+      ACTION.CLASS_CALENDAR,
+      id,
+    );
+
+    if (!hasPermission) {
+      return prepareResponse(res, 403, 'Access Denied');
+    }
+
     const calendar = await models.classCalendar.findFirst({
       where: { id },
     });
@@ -26,7 +38,7 @@ const getOneCalendar = async (req, res) => {
     });
   } catch (err) {
     logger.error(err);
-    return prepareResponse(res, 400, 'System server error!');
+    return prepareResponse(res, 400, 'Get class calendar failed');
   }
 };
 
@@ -48,6 +60,17 @@ const createCalendar = async (req, res) => {
   const { classId, studyDate } = req.body;
 
   try {
+    const hasPermission = await hasPermissionOnClass(
+      req,
+      res,
+      ACTION.CLASS_CALENDAR,
+      classId,
+    );
+
+    if (!hasPermission) {
+      return prepareResponse(res, 403, 'Access Denied');
+    }
+
     const error = validationResult(req);
     if (!error.isEmpty()) {
       logger.error(error.array());
@@ -107,6 +130,17 @@ const deleteCalendar = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const hasPermission = await hasPermissionOnClass(
+      req,
+      res,
+      ACTION.CLASS_CALENDAR,
+      id,
+    );
+
+    if (!hasPermission) {
+      return prepareResponse(res, 403, 'Access Denied');
+    }
+
     const calendar = await models.classCalendar.findFirst({ where: { id } });
 
     if (!calendar) {
