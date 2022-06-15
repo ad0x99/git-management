@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator');
 const { prepareResponse } = require('../CONST/response');
 const { models } = require('../db');
 const { logger } = require('../helpers/logger');
+const { uploadFile } = require('../utils/S3Service');
 
 /**
  * It gets a single class info from the database
@@ -81,7 +82,7 @@ const getAllClass = async (req, res) => {
  */
 const createNewClass = async (req, res) => {
   const { host, className, subject, startDate, endDate } = req.body;
-  const file = req.file.path;
+  const file = req.file;
 
   try {
     const errors = validationResult(req);
@@ -108,8 +109,9 @@ const createNewClass = async (req, res) => {
     let fileUpload = null;
 
     if (file && newClass) {
+      const fileUrl = await uploadFile(file);
       fileUpload = await models.fileStorage.create({
-        data: { classId: newClass.id, link: file },
+        data: { classId: newClass.id, link: fileUrl.Location },
       });
     }
 

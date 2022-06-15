@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@prisma/client": "^3.14.0",
+    "aws-sdk": "^2.1154.0",
     "multer": "^1.4.4",
     "prisma": "^3.14.0"
   }
